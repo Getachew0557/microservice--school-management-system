@@ -4,6 +4,7 @@ import CssBaseline from '@mui/material/CssBaseline'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+import TestComponent from './components/TestComponent'
 
 const theme = createTheme({
   palette: {
@@ -33,6 +34,7 @@ function App() {
         <Button variant="contained" color="primary" sx={{ mt: 3 }}>
           Get Started
         </Button>
+        <TestComponent />
       </Container>
     </ThemeProvider>
   )
