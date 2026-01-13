@@ -9,6 +9,30 @@ A microservices-based school management system built with:
 - GitHub Actions (CI/CD)
 
 ## Project Structure
+```bash
+school-management-system/
+├── frontend/
+├── api-gateway/
+├── student-service/
+│   ├── Dockerfile.dev
+│   ├── src/
+│   └── sql/
+├── teacher-service/
+├── docker-compose.yml
+├── docker-compose.monitoring.yml
+├── monitoring/
+│   ├── prometheus/
+│   ├── grafana/
+│   └── promtail/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       ├── docker-build.yml
+│       └── deploy-dev.yml
+├── scripts/
+├── Makefile
+└── README.md
+```
 
 ## 🚀 How to Run:
 ### windows

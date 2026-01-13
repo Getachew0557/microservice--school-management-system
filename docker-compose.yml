@@ -1,0 +1,255 @@
+version: "3.8"
+
+services:
+  # MySQL Databases
+  mysql-student:
+    image: mysql:8.0
+    container_name: mysql-student
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${STUDENT_DB_NAME:-student_db}
+      # Do not set MYSQL_USER=root. Configure root with MYSQL_ROOT_PASSWORD only.
+    ports:
+      - "${STUDENT_DB_PORT:-3307}:3306"
+    volumes:
+      - mysql-student-data:/var/lib/mysql
+      - ./student-service/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - school-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password
+
+  mysql-teacher:
+    image: mysql:8.0
+    container_name: mysql-teacher
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${TEACHER_DB_NAME:-teacher_db}
+      # Do not set MYSQL_USER=root. Configure root with MYSQL_ROOT_PASSWORD only.
+    ports:
+      - "${TEACHER_DB_PORT:-3308}:3306"
+    volumes:
+      - mysql-teacher-data:/var/lib/mysql
+      - ./teacher-service/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - school-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis Cache (optional, for future)
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - school-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Student Service
+  student-service:
+    build:
+      context: ./student-service
+      target: ${NODE_ENV:-development}
+    container_name: student-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${STUDENT_SERVICE_PORT:-3001}
+      DB_HOST: mysql-student
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-root}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-rootpassword}
+      DB_NAME: ${STUDENT_DB_NAME:-student_db}
+      DB_POOL_LIMIT: ${DB_POOL_LIMIT:-10}
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_key_change_in_production}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${STUDENT_SERVICE_PORT:-3001}:3001"
+    volumes:
+      - ./student-service:/app
+      - /app/node_modules
+      - student-logs:/app/logs
+    depends_on:
+      mysql-student:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - school-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3001/health', (r) => {if(r.statusCode===200)process.exit(0);process.exit(1)})",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Teacher Service
+  teacher-service:
+    build:
+      context: ./teacher-service
+      target: ${NODE_ENV:-development}
+    container_name: teacher-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${TEACHER_SERVICE_PORT:-3002}
+      DB_HOST: mysql-teacher
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-root}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-rootpassword}
+      DB_NAME: ${TEACHER_DB_NAME:-teacher_db}
+      DB_POOL_LIMIT: ${DB_POOL_LIMIT:-10}
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_key_change_in_production}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${TEACHER_SERVICE_PORT:-3002}:3002"
+    volumes:
+      - ./teacher-service:/app
+      - /app/node_modules
+      - teacher-logs:/app/logs
+    depends_on:
+      mysql-teacher:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - school-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3002/health', (r) => {if(r.statusCode===200)process.exit(0);process.exit(1)})",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      target: ${NODE_ENV:-development}
+    container_name: api-gateway
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${API_GATEWAY_PORT:-3000}
+      STUDENT_SERVICE_URL: http://student-service:3001
+      TEACHER_SERVICE_URL: http://teacher-service:3002
+      COURSE_SERVICE_URL: http://course-service:3003
+      GRADE_SERVICE_URL: http://grade-service:3004
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-10000}
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-15}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+    ports:
+      - "${API_GATEWAY_PORT:-3000}:3000"
+    volumes:
+      - ./api-gateway:/app
+      - /app/node_modules
+      - gateway-logs:/app/logs
+    depends_on:
+      - student-service
+      - teacher-service
+    networks:
+      - school-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/health', (r) => {if(r.statusCode===200)process.exit(0);process.exit(1)})",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      target: ${FRONTEND_TARGET:-development}
+    container_name: frontend
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000/api}
+      VITE_APP_NAME: ${VITE_APP_NAME:-"School Management System"}
+      VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.0}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      - api-gateway
+    networks:
+      - school-network
+    restart: unless-stopped
+
+  # Database Admin UI (Optional)
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql-student
+    networks:
+      - school-network
+    restart: unless-stopped
+
+  # Portainer (Optional - Docker Management)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "${PORTAINER_PORT:-9000}:9000"
+      - "${PORTAINER_AGENT_PORT:-8000}:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - school-network
+    restart: unless-stopped
+
+networks:
+  school-network:
+    driver: bridge
+    name: school-network
+
+volumes:
+  mysql-student-data:
+  mysql-teacher-data:
+  redis-data:
+  student-logs:
+  teacher-logs:
+  gateway-logs:
+  portainer-data:
