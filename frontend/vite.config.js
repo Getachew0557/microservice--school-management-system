@@ -7,6 +7,24 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      '/api/students': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/teachers': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+      },
+      '/api/courses': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+      },
+      '/api/grades': {
+        target: 'http://localhost:3004',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'build',

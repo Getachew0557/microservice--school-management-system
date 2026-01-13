@@ -11,6 +11,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { ThemeContext } from './context/ThemeContext';
 import Dashboard from "./pages/Dashboard";
 import StudentsPage from "./pages/StudentsPage";
+import TeachersPage from "./pages/TeachersPage";
 import Layout from "./components/layout/Layout";
 import { lightTheme, darkTheme } from './theme';
 
@@ -37,6 +38,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/students" element={<StudentsPage />} />
+                  <Route path="/teachers" element={<TeachersPage />} />
                   {/* Add more routes as we build them */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

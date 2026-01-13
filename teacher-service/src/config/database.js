@@ -6,7 +6,7 @@ const pool = mysql.createPool({
   port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'teacher_db',
+  database: process.env.DB_NAME || 'school_management',
   waitForConnections: true,
   connectionLimit: process.env.DB_POOL_LIMIT || 10,
   queueLimit: 0,
@@ -48,7 +48,7 @@ async function initializeDatabase() {
   try {
     await pool.query(createTableQuery);
     console.log('✅ Teachers table initialized');
-    
+
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM teachers');
     if (rows[0].count === 0) {
       await pool.query(`

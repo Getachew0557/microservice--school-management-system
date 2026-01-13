@@ -3,11 +3,26 @@ require('dotenv').config();
 
 // Use test database for test environment
 const dbConfig = {
-  host: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_HOST : process.env.DB_HOST,
-  port: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_PORT : process.env.DB_PORT,
-  user: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_USER : process.env.DB_USER,
-  password: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_PASSWORD : process.env.DB_PASSWORD,
-  database: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_NAME : process.env.DB_NAME,
+  host:
+    process.env.NODE_ENV === 'test'
+      ? process.env.TEST_DB_HOST
+      : process.env.DB_HOST,
+  port:
+    process.env.NODE_ENV === 'test'
+      ? process.env.TEST_DB_PORT
+      : process.env.DB_PORT,
+  user:
+    process.env.NODE_ENV === 'test'
+      ? process.env.TEST_DB_USER
+      : process.env.DB_USER,
+  password:
+    process.env.NODE_ENV === 'test'
+      ? process.env.TEST_DB_PASSWORD
+      : process.env.DB_PASSWORD,
+  database:
+    process.env.NODE_ENV === 'test'
+      ? process.env.TEST_DB_NAME
+      : process.env.DB_NAME || 'school_management',
   waitForConnections: true,
   connectionLimit: process.env.DB_POOL_LIMIT || 10,
   queueLimit: 0,
@@ -61,7 +76,7 @@ async function initializeDatabase() {
   try {
     await pool.query(createTableQuery);
     console.log('✅ Students table initialized');
-    
+
     // Add sample data if table is empty
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM students');
     if (rows[0].count === 0) {

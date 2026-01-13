@@ -1,9 +1,7 @@
 import axios from "axios";
 
-// Create axios instance with base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:3001/api",
-  timeout: 10000, // 10 seconds
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,7 +10,6 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token if exists
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -28,35 +25,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    // Handle errors
     if (error.response) {
-      // Server responded with error
       const { status, data } = error.response;
 
       switch (status) {
-        case 400:
-          console.error("Bad Request:", data.message);
-          break;
         case 401:
           console.error("Unauthorized");
-          // Redirect to login
           window.location.href = "/login";
           break;
-        case 404:
-          console.error("Resource not found");
-          break;
-        case 500:
-          console.error("Server error");
+        case 503:
+          console.error("Service unavailable:", data.message);
           break;
         default:
           console.error("Error:", data.message);
       }
-    } else if (error.request) {
-      // Request made but no response
-      console.error("No response received:", error.request);
-    } else {
-      // Something else happened
-      console.error("Error:", error.message);
     }
 
     return Promise.reject(error.response?.data || error.message);
@@ -65,21 +47,63 @@ api.interceptors.response.use(
 
 // Student API methods
 export const studentApi = {
-  // Get all students
-  getAll: (params) => api.get("/students", { params }),
-
-  // Get student by ID
-  getById: (id) => api.get(`/students/${id}`),
-
-  // Create new student
-  create: (studentData) => api.post("/students", studentData),
-
-  // Update student
-  update: (id, studentData) => api.put(`/students/${id}`, studentData),
-
-  // Delete student
-  delete: (id) => api.delete(`/students/${id}`),
-
-  // Search students
-  search: (query) => api.get("/students/search", { params: { q: query } }),
+  getAll: (params) => api.get("http://localhost:3001/api/students", { params }),
+  getById: (id) => api.get(`http://localhost:3001/api/students/${id}`),
+  create: (studentData) =>
+    api.post("http://localhost:3001/api/students", studentData),
+  update: (id, studentData) =>
+    api.put(`http://localhost:3001/api/students/${id}`, studentData),
+  delete: (id) => api.delete(`http://localhost:3001/api/students/${id}`),
+  search: (query) =>
+    api.get("http://localhost:3001/api/students/search", {
+      params: { q: query },
+    }),
+  getDashboardStats: () =>
+    api.get("http://localhost:3001/api/students/stats/dashboard"),
 };
+
+// Teacher API methods
+// export const teacherApi = {
+//   getAll: (params) => api.get('/teachers', { params }),
+//   getById: (id) => api.get(`/teachers/${id}`),
+//   create: (teacherData) => api.post('/teachers', teacherData),
+//   update: (id, teacherData) => api.put(`/teachers/${id}`, teacherData),
+//   delete: (id) => api.delete(`/teachers/${id}`),
+//   search: (query) => api.get('/teachers/search', { params: { q: query } }),
+//   getStats: () => api.get('/teachers/stats'),
+// };
+
+// Teacher API methods
+export const teacherApi = {
+  getAll: (params) => api.get("http://localhost:3002/api/teachers", { params }),
+  getById: (id) => api.get(`http://localhost:3002/api/teachers/${id}`),
+  create: (teacherData) =>
+    api.post("http://localhost:3002/api/teachers", teacherData),
+  update: (id, teacherData) =>
+    api.put(`http://localhost:3002/api/teachers/${id}`, teacherData),
+  delete: (id) => api.delete(`http://localhost:3002/api/teachers/${id}`),
+  search: (query) =>
+    api.get("http://localhost:3002/api/teachers/search", {
+      params: { q: query },
+    }),
+};
+
+// Course API methods (for future use)
+export const courseApi = {
+  getAll: (params) => api.get("/courses", { params }),
+  getById: (id) => api.get(`/courses/${id}`),
+  create: (courseData) => api.post("/courses", courseData),
+  update: (id, courseData) => api.put(`/courses/${id}`, courseData),
+  delete: (id) => api.delete(`/courses/${id}`),
+};
+
+// Grade API methods (for future use)
+export const gradeApi = {
+  getAll: (params) => api.get("/grades", { params }),
+  getById: (id) => api.get(`/grades/${id}`),
+  create: (gradeData) => api.post("/grades", gradeData),
+  update: (id, gradeData) => api.put(`/grades/${id}`, gradeData),
+  delete: (id) => api.delete(`/grades/${id}`),
+};
+
+export default api;
