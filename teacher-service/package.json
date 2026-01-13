@@ -2,13 +2,20 @@
   "name": "teacher-service",
   "version": "1.0.0",
   "main": "index.js",
+  "description": "Teacher service for school management system",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.js\""
   },
   "keywords": [],
-  "author": "",
+  "author": "Getachew G.",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -16,5 +23,22 @@
     "helmet": "^8.1.0",
     "morgan": "^1.10.1",
     "mysql2": "^3.16.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.4",
+    "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/"
+    ],
+    "setupFilesAfterEnv": [
+      "./src/tests/setup.js"
+    ]
   }
 }
