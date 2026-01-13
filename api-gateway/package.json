@@ -1,6 +1,7 @@
 {
   "name": "api-gateway",
   "version": "1.0.0",
+  "description": "API Gateway for School Management System",
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
@@ -15,14 +16,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "http-proxy-middleware": "^3.0.5",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "eslint": "^9.39.2",
