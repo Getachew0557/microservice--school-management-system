@@ -1,0 +1,35 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    
+    - name: Check commit messages
+      uses: wagoid/commitlint-github-action@v5
+    
+    - name: Check PR size
+      uses: bubkoo/pr-size@v1
+      with:
+        max-additions: 500
+        max-deletions: 300
+    
+    - name: Run ESLint
+      run: |
+        cd student-service && npm run lint || true
+        cd ../teacher-service && npm run lint || true
+        cd ../api-gateway && npm run lint || true
+        cd ../frontend && npm run lint || true

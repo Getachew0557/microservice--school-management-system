@@ -1,0 +1,52 @@
+name: Deploy to Development
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy using SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd /opt/school-management-system
+          
+          # Pull latest images
+          docker pull ${{ secrets.DOCKER_USERNAME }}/student-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/teacher-service:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+          
+          # Stop and remove old containers
+          docker-compose down
+          
+          # Start with new images
+          docker-compose up -d
+          
+          # Cleanup
+          docker system prune -f
+          
+          echo "✅ Deployment completed!"
+    
+    - name: Send notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: deployments
+        SLACK_COLOR: good
+        SLACK_TITLE: "Deployment Successful"
+        SLACK_MESSAGE: "School Management System deployed to development"

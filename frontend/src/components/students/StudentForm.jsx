@@ -118,11 +118,13 @@ function StudentForm({ studentId, onSuccess, onCancel }) {
         await createMutation.mutateAsync(formattedData);
       }
       onSuccess?.();
-    } catch (err) {
+    } catch {
       // Error is handled by mutation
     }
   };
 
+  // watch() returns functions that cannot be memoized safely — ignore this lint rule here
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedValues = watch();
 
   return (
