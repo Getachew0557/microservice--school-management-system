@@ -55,7 +55,7 @@ function StudentsPage() {
   };
 
   return (
-    <Layout>
+    <>
       <Box sx={{ mb: 3 }}>
         <Breadcrumbs aria-label="breadcrumb">
           <Link
@@ -124,7 +124,7 @@ function StudentsPage() {
           />
         </DialogContent>
       </Dialog>
-    </Layout>
+</>
   );
 }
 

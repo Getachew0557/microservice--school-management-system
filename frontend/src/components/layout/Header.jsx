@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useContext } from "react";
 import {
   AppBar,
   Toolbar,
@@ -6,16 +6,18 @@ import {
   Typography,
   Badge,
   Box,
-  Avatar,
   Menu,
   MenuItem,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import AccountCircle from '@mui/icons-material/AccountCircle';
+  Switch,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import { ThemeContext } from "../../context/ThemeContext";
 
 function Header({ handleDrawerToggle }) {
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const { mode, toggleTheme } = useContext(ThemeContext);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -30,7 +32,7 @@ function Header({ handleDrawerToggle }) {
       position="fixed"
       sx={{
         width: { sm: `calc(100% - 240px)` },
-        ml: { sm: '240px' },
+        ml: { sm: "240px" },
       }}
     >
       <Toolbar>
@@ -39,44 +41,35 @@ function Header({ handleDrawerToggle }) {
           aria-label="open drawer"
           edge="start"
           onClick={handleDrawerToggle}
-          sx={{ mr: 2, display: { sm: 'none' } }}
+          sx={{ mr: 2, display: { sm: "none" } }}
         >
           <MenuIcon />
         </IconButton>
-        
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
           School Management System
         </Typography>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+
+        {/* 🌗 Theme Switch */}
+        <Switch
+          checked={mode === "dark"}
+          onChange={toggleTheme}
+          color="default"
+        />
+
+        <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton color="inherit">
             <Badge badgeContent={4} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
-          
-          <IconButton
-            size="large"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleMenu}
-            color="inherit"
-          >
+
+          <IconButton color="inherit" onClick={handleMenu}>
             <AccountCircle />
           </IconButton>
+
           <Menu
-            id="menu-appbar"
             anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
