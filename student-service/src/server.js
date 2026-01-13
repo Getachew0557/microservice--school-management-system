@@ -41,47 +41,50 @@ app.use((req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
-async function startServer() {
-  try {
-    // Test database connection
-    const dbConnected = await testConnection();
-    if (!dbConnected) {
-      console.error('❌ Cannot start server without database connection');
+// Only start the server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  // Start server
+  async function startServer() {
+    try {
+      // Test database connection
+      const dbConnected = await testConnection();
+      if (!dbConnected) {
+        console.error('❌ Cannot start server without database connection');
+        process.exit(1);
+      }
+
+      // Initialize database tables
+      await initializeDatabase();
+
+      // Start listening
+      app.listen(PORT, () => {
+        console.log(`✅ Server is running on http://localhost:${PORT}`);
+        console.log(`📚 API Documentation:`);
+        console.log(`   Health check: GET /health`);
+        console.log(`   Get students: GET /api/students`);
+        console.log(`   Create student: POST /api/students`);
+        console.log(`   Get student: GET /api/students/:id`);
+        console.log(`   Update student: PUT /api/students/:id`);
+        console.log(`   Delete student: DELETE /api/students/:id`);
+      });
+    } catch (error) {
+      console.error('❌ Failed to start server:', error);
       process.exit(1);
     }
-
-    // Initialize database tables
-    await initializeDatabase();
-
-    // Start listening
-    app.listen(PORT, () => {
-      console.log(`✅ Server is running on http://localhost:${PORT}`);
-      console.log(`📚 API Documentation:`);
-      console.log(`   Health check: GET /health`);
-      console.log(`   Get students: GET /api/students`);
-      console.log(`   Create student: POST /api/students`);
-      console.log(`   Get student: GET /api/students/:id`);
-      console.log(`   Update student: PUT /api/students/:id`);
-      console.log(`   Delete student: DELETE /api/students/:id`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
   }
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
+  // Start the server
+  startServer();
 }
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// Start the server
-startServer();
 
 module.exports = app; // For testing

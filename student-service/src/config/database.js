@@ -1,25 +1,30 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Create a connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'student_db',
+// Use test database for test environment
+const dbConfig = {
+  host: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_HOST : process.env.DB_HOST,
+  port: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_PORT : process.env.DB_PORT,
+  user: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_USER : process.env.DB_USER,
+  password: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_PASSWORD : process.env.DB_PASSWORD,
+  database: process.env.NODE_ENV === 'test' ? process.env.TEST_DB_NAME : process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: process.env.DB_POOL_LIMIT || 10,
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
-});
+};
+
+console.log(`Connecting to database: ${dbConfig.database}`);
+
+// Create a connection pool
+const pool = mysql.createPool(dbConfig);
 
 // Test database connection
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ Database connected successfully');
+    console.log(`✅ Database connected successfully to ${dbConfig.database}`);
     connection.release();
     return true;
   } catch (error) {
@@ -30,6 +35,12 @@ async function testConnection() {
 
 // Initialize database tables
 async function initializeDatabase() {
+  // Don't initialize in test environment - tests handle their own setup
+  if (process.env.NODE_ENV === 'test') {
+    console.log('⏭️ Skipping database initialization in test environment');
+    return;
+  }
+
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS students (
       id INT PRIMARY KEY AUTO_INCREMENT,

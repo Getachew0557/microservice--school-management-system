@@ -36,3 +36,45 @@ Student management microservice for School Management System.
   "address": "123 Main St",
   "status": "active"
 }
+
+Create Databases:
+
+```bash
+// -- Create student database
+CREATE DATABASE IF NOT EXISTS student_db;
+USE student_db;
+
+// -- Verify tables will be created by our app
+SHOW TABLES;
+```
+## Running the Service
+- Install dependencies:
+
+```bash
+npm install
+```
+- Set up environment variables:
+
+```bash
+cp .env.example .env
+# Edit .env with your database credentials
+```
+- Run in development:
+
+```bash
+npm run dev
+```
+- Run tests:
+
+```bash
+npm test
+```
+- Start production:
+
+```bash
+npm start
+```
+text
+
+#### **Step 2: Create .gitignore for Student Service**
+Create `student-service/.gitignore`:
